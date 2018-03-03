@@ -9,6 +9,7 @@ class Game extends Component {
                    ['_', '_', '_'],   
                    ['_', '_', '_']],
       didWin: false,
+      isComputerPlaying: false, // remember this so that user cannot interrupt even after clicking b4 computers move.
     };
   }
 
@@ -92,6 +93,10 @@ class Game extends Component {
   }
 
   scheduleComputersMove = (tempGridValues) => {
+    // remembering if computer is playing so that if the user clicks on grids randomly, before computer plays,
+    // the game doesn't get affected by it.
+    this.setState({isComputerPlaying: false});
+
     const updatedGridValues = this.computersNextMove(tempGridValues);
     this.setState({gridValue: updatedGridValues});
       
@@ -105,6 +110,12 @@ class Game extends Component {
 
   handleOnClickGrid = (row, col) => {
     return () => { // anonymous arrow function
+      // check if computer is playing. If yes, then user cannot interrupt.
+      if(this.state.isComputerPlaying) {
+        return;
+      }
+
+      // continue with other steps if computer is not playing
       const tempGridValues = this.state.gridValues.slice();
       console.log("tempGridValues: ", tempGridValues);
 
@@ -128,6 +139,10 @@ class Game extends Component {
         return;
       }
 
+      // donot let user interrupt while computer is playing.
+      this.setState({isComputerPlaying: true});
+
+      // schedule computer's move after 1 second
       setTimeout(function() {
         this.scheduleComputersMove(tempGridValues);
       }.bind(this), 1000);
