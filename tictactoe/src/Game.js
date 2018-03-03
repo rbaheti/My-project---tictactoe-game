@@ -8,6 +8,7 @@ class Game extends Component {
       gridValues: [['_', '_', '_'], 
                    ['_', '_', '_'],   
                    ['_', '_', '_']],
+      didWin: false,
     };
   }
 
@@ -51,12 +52,12 @@ class Game extends Component {
   }
 
   computersNextMove = (gridValues) => {
-    // Find a cell where 'X' can win.
+    // Find a cell where 'O' can win.
     for(let row = 0; row < 3; ++row) {
       for(let col = 0; col < 3; ++col) {
         if(gridValues[row][col] === '_') {
-          gridValues[row][col] = 'X';
-          if(this.checkIfWon('X', gridValues)) {
+          gridValues[row][col] = 'O';
+          if(this.checkIfWon('O', gridValues)) {
             gridValues[row][col] = 'O';
             return gridValues;
           }
@@ -65,12 +66,12 @@ class Game extends Component {
       }
     }
 
-    // Find a cell where 'O' can win.
+    // Find a cell where 'X' can win.
     for(let row = 0; row < 3; ++row) {
       for(let col = 0; col < 3; ++col) {
         if(gridValues[row][col] === '_') {
-          gridValues[row][col] = 'O';
-          if(this.checkIfWon('O', gridValues)) {
+          gridValues[row][col] = 'X';
+          if(this.checkIfWon('X', gridValues)) {
             gridValues[row][col] = 'O';
             return gridValues;
           }
@@ -90,11 +91,29 @@ class Game extends Component {
     }
   }
 
+  scheduleComputersMove = (tempGridValues) => {
+    const updatedGridValues = this.computersNextMove(tempGridValues);
+    this.setState({gridValue: updatedGridValues});
+      
+    // check if 'O' won
+    if(this.checkIfWon('O', tempGridValues)) {
+      console.log("Computer won!");
+      this.setState({didWin: true});
+      return;
+    }
+  }
+
   handleOnClickGrid = (row, col) => {
     return () => { // anonymous arrow function
       const tempGridValues = this.state.gridValues.slice();
       console.log("tempGridValues: ", tempGridValues);
 
+      // if anybody wins, disable clicking any grid
+      if(this.state.didWin) {
+        return;
+      }
+
+      // assign 'X' to the given grid
       if(tempGridValues[row][col] === '_') {
         tempGridValues[row][col] = 'X';
         this.setState({gridValue: tempGridValues});
@@ -105,23 +124,19 @@ class Game extends Component {
       // check if X won
       if(this.checkIfWon('X', tempGridValues)) {
         console.log("You won!!!!!");
+        this.setState({didWin: true});
         return;
       }
 
-      const updatedGridValues = this.computersNextMove(tempGridValues);
-      this.setState({gridValue: updatedGridValues});
-        
-      // check if 'O' won
-      if(this.checkIfWon('O', tempGridValues)) {
-        console.log("Computer won!");
-        return;
-      }
+      setTimeout(function() {
+        this.scheduleComputersMove(tempGridValues);
+      }.bind(this), 1000);
     }
   }
 
   render() {
     const grid_rows = [];
-    let value = 1;
+    let value = 1; // this value is used for setting unique key for each grid
     for(let row = 0; row < 3; ++row) {
       for(let col = 0; col < 3; ++col) {
         grid_rows.push(<div key={value} onClick={this.handleOnClickGrid(row, col)} 
