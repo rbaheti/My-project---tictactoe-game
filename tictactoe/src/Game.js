@@ -10,6 +10,9 @@ class Game extends Component {
                    ['_', '_', '_']],
       didWin: false,
       isComputerPlaying: false, // remember this so that user cannot interrupt even after clicking b4 computers move.
+      winner: 'Its a draw!',
+      isGameOver: false,
+      numOfGridsFilled: 0,
     };
   }
 
@@ -53,6 +56,9 @@ class Game extends Component {
   }
 
   computersNextMove = (gridValues) => {
+    if(this.state.numOfGridsFilled === 9) {
+      this.setState({isGameOver: true});
+    }
     // Find a cell where 'O' can win.
     for(let row = 0; row < 3; ++row) {
       for(let col = 0; col < 3; ++col) {
@@ -60,6 +66,7 @@ class Game extends Component {
           gridValues[row][col] = 'O';
           if(this.checkIfWon('O', gridValues)) {
             gridValues[row][col] = 'O';
+            this.setState({numOfGridsFilled: this.state.numOfGridsFilled+1});
             return gridValues;
           }
           gridValues[row][col] = '_';
@@ -74,6 +81,7 @@ class Game extends Component {
           gridValues[row][col] = 'X';
           if(this.checkIfWon('X', gridValues)) {
             gridValues[row][col] = 'O';
+            this.setState({numOfGridsFilled: this.state.numOfGridsFilled+1});
             return gridValues;
           }
           gridValues[row][col] = '_';
@@ -86,6 +94,7 @@ class Game extends Component {
       for(let col = 0; col < 3; ++col) {
         if(gridValues[row][col] === '_') {
           gridValues[row][col] = 'O';
+          this.setState({numOfGridsFilled: this.state.numOfGridsFilled+1});
           return gridValues;
         }
       }
@@ -103,7 +112,7 @@ class Game extends Component {
     // check if 'O' won
     if(this.checkIfWon('O', tempGridValues)) {
       console.log("Computer won!");
-      this.setState({didWin: true});
+      this.setState({didWin: true, winner: 'Yay! I won!', isGameOver: true});
       return;
     }
   }
@@ -114,20 +123,23 @@ class Game extends Component {
       if(this.state.isComputerPlaying) {
         return;
       }
+      // if anybody wins, disable clicking any grid
+      if(this.state.didWin) {
+        return;
+      }
+      // 
+      if(this.state.numOfGridsFilled === 9) {
+        this.setState({isGameOver: true});
+      }
 
       // continue with other steps if computer is not playing
       const tempGridValues = this.state.gridValues.slice();
       console.log("tempGridValues: ", tempGridValues);
 
-      // if anybody wins, disable clicking any grid
-      if(this.state.didWin) {
-        return;
-      }
-
       // assign 'X' to the given grid
       if(tempGridValues[row][col] === '_') {
         tempGridValues[row][col] = 'X';
-        this.setState({gridValue: tempGridValues});
+        this.setState({gridValue: tempGridValues, numOfGridsFilled: this.state.numOfGridsFilled+1});
       } else {
         return;
       }
@@ -135,7 +147,7 @@ class Game extends Component {
       // check if X won
       if(this.checkIfWon('X', tempGridValues)) {
         console.log("You won!!!!!");
-        this.setState({didWin: true});
+        this.setState({didWin: true, winner: 'Congrats! You won!', isGameOver: true});
         return;
       }
 
@@ -162,6 +174,7 @@ class Game extends Component {
 
     return (
       <div className="grid-container">
+        {this.state.isGameOver ? <p>{this.state.winner}</p> : null}
         <div className="grid">
           {grid_rows}
         </div>
