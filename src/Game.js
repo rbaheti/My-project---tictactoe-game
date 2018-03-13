@@ -112,7 +112,7 @@ class Game extends Component {
     // check if 'O' won
     if(this.checkIfWon('O', tempGridValues)) {
       console.log("Computer won!");
-      this.setState({didWin: true, winner: 'Yay! I won!', isGameOver: true});
+      this.setState({didWin: true, winner: 'Sorry, you lost!', isGameOver: true});
       return;
     }
   }
