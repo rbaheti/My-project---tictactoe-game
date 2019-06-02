@@ -1,33 +1,32 @@
 body {
-    color: red;
+    color: #73c6b6;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: 100px 100px 100px;
-  background-color: #2196F3;
-  padding: 100px;
-  justify-content: center;
-}
-
-.grid-item {
-  background-color: rgba(237, 243, 255);
-  border: 1px solid rgba(0, 0, 0, 0.8);
-  font-size: 30px;
-  padding: 20px
-}
-
-.square {
-  background: #fff;
-  border: 1px solid #999;
-  float: left;
-  font-size: 24px;
-  font-weight: bold;
-  line-height: 34px;
-  height: 34px;
-  margin-right: -1px;
-  margin-top: -1px;
-  padding: 0;
+.footerDiv {
   text-align: center;
-  width: 34px;
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
+
+.game-board
+{
+	width: 500px;
+	height: 500px;
+  margin: 20px auto;
+  background-color: #73c6b6;
+  color: #fff;
+	
+	display: grid;
+	grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+}
+
+.box
+{
+  border: 6px solid #FFFFFF;
+  font-family: Helvetica;
+  font-weight: bold;
+  font-size: 4em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

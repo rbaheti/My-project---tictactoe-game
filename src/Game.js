@@ -5,14 +5,16 @@ class Game extends Component {
   constructor() {
     super();
     this.state = {
-      gridValues: [['_', '_', '_'], 
-                   ['_', '_', '_'],   
-                   ['_', '_', '_']],
+      gridValues: [[' ', ' ', ' '], 
+                   [' ', ' ', ' '],   
+                   [' ', ' ', ' ']],
       didWin: false,
+      didTie: false,
       isComputerPlaying: false, // remember this so that user cannot interrupt even after clicking b4 computers move.
       winner: 'Its a draw!',
-      isGameOver: false,
       numOfGridsFilled: 0,
+      userScore: 0,
+      computerScore: 0
     };
   }
 
@@ -57,19 +59,20 @@ class Game extends Component {
 
   computersNextMove = (gridValues) => {
     if(this.state.numOfGridsFilled === 9) {
-      this.setState({isGameOver: true});
+      this.setState({didTie : true});
     }
+
     // Find a cell where 'O' can win.
     for(let row = 0; row < 3; ++row) {
       for(let col = 0; col < 3; ++col) {
-        if(gridValues[row][col] === '_') {
+        if(gridValues[row][col] === ' ') {
           gridValues[row][col] = 'O';
           if(this.checkIfWon('O', gridValues)) {
             gridValues[row][col] = 'O';
             this.setState({numOfGridsFilled: this.state.numOfGridsFilled+1});
             return gridValues;
           }
-          gridValues[row][col] = '_';
+          gridValues[row][col] = ' ';
         }
       }
     }
@@ -77,14 +80,14 @@ class Game extends Component {
     // Find a cell where 'X' can win.
     for(let row = 0; row < 3; ++row) {
       for(let col = 0; col < 3; ++col) {
-        if(gridValues[row][col] === '_') {
+        if(gridValues[row][col] === ' ') {
           gridValues[row][col] = 'X';
           if(this.checkIfWon('X', gridValues)) {
             gridValues[row][col] = 'O';
             this.setState({numOfGridsFilled: this.state.numOfGridsFilled+1});
             return gridValues;
           }
-          gridValues[row][col] = '_';
+          gridValues[row][col] = ' ';
         }
       }
     }
@@ -92,7 +95,7 @@ class Game extends Component {
     // Place 'O' anywhere.
     for(let row = 0; row < 3; ++row) {
       for(let col = 0; col < 3; ++col) {
-        if(gridValues[row][col] === '_') {
+        if(gridValues[row][col] === ' ') {
           gridValues[row][col] = 'O';
           this.setState({numOfGridsFilled: this.state.numOfGridsFilled+1});
           return gridValues;
@@ -102,17 +105,14 @@ class Game extends Component {
   }
 
   scheduleComputersMove = (tempGridValues) => {
-    // remembering if computer is playing so that if the user clicks on grids randomly, before computer plays,
-    // the game doesn't get affected by it.
-    this.setState({isComputerPlaying: false});
-
     const updatedGridValues = this.computersNextMove(tempGridValues);
-    this.setState({gridValue: updatedGridValues});
+    this.setState({gridValue: updatedGridValues, isComputerPlaying: false});
       
     // check if 'O' won
     if(this.checkIfWon('O', tempGridValues)) {
-      console.log("Computer won!");
-      this.setState({didWin: true, winner: 'Sorry, you lost!', isGameOver: true});
+      let score = this.state.computerScore;
+      score += 1;
+      this.setState({didWin: true, winner: 'computer', computerScore: score});
       return;
     }
   }
@@ -123,13 +123,13 @@ class Game extends Component {
       if(this.state.isComputerPlaying) {
         return;
       }
-      // if anybody wins, disable clicking any grid
-      if(this.state.didWin) {
+
+      // if anybody wins, reset the grid.
+      if (this.state.didWin || this.state.didTie) {
+        this.setState({didWin : false, didTie: false, isComputerPlaying: false, winner: 'Its a draw!', numOfGridsFilled: 0});
+        let gridValues = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']];
+        this.setState({gridValues});
         return;
-      }
-      // 
-      if(this.state.numOfGridsFilled === 9) {
-        this.setState({isGameOver: true});
       }
 
       // continue with other steps if computer is not playing
@@ -137,7 +137,7 @@ class Game extends Component {
       console.log("tempGridValues: ", tempGridValues);
 
       // assign 'X' to the given grid
-      if(tempGridValues[row][col] === '_') {
+      if(tempGridValues[row][col] === ' ') {
         tempGridValues[row][col] = 'X';
         this.setState({gridValue: tempGridValues, numOfGridsFilled: this.state.numOfGridsFilled+1});
       } else {
@@ -146,18 +146,19 @@ class Game extends Component {
 
       // check if X won
       if(this.checkIfWon('X', tempGridValues)) {
-        console.log("You won!!!!!");
-        this.setState({didWin: true, winner: 'Congrats! You won!', isGameOver: true});
+        let score = this.state.userScore;
+        score += 1;
+        this.setState({didWin: true, winner: 'user', userScore: score});
         return;
       }
 
       // donot let user interrupt while computer is playing.
       this.setState({isComputerPlaying: true});
 
-      // schedule computer's move after 1 second
+      // schedule computer's move
       setTimeout(function() {
         this.scheduleComputersMove(tempGridValues);
-      }.bind(this), 1000);
+      }.bind(this), 100);
     }
   }
 
@@ -166,18 +167,29 @@ class Game extends Component {
     let value = 1; // this value is used for setting unique key for each grid
     for(let row = 0; row < 3; ++row) {
       for(let col = 0; col < 3; ++col) {
-        grid_rows.push(<div key={value} onClick={this.handleOnClickGrid(row, col)} 
-          className="grid-item" >{this.state.gridValues[row][col]}</div>);
+        grid_rows.push(<div className="box" key={value} onClick={this.handleOnClickGrid(row, col)}>
+        {this.state.gridValues[row][col]}
+        </div>);
         ++value;
       }
     }
 
+    let winTieDiv = <div></div>;
+    if (this.state.didWin) {
+      winTieDiv = <div className="footerDiv"><strong>{this.state.winner === "user" ? "You" : "Computer"} Won!</strong></div>;
+    } else if (this.state.didTie) {
+      winTieDiv = <div className="footerDiv"><strong>It was a tie!</strong></div>;
+    }
+
+    let winCounter = <div className="footerDiv"><strong>Your score: {this.state.userScore}&nbsp;&nbsp;Computer's score: {this.state.computerScore}</strong></div>;
+
     return (
-      <div className="grid-container">
-        {this.state.isGameOver ? <p>{this.state.winner}</p> : null}
-        <div className="grid">
+      <div>
+        <div className="game-board">
           {grid_rows}
         </div>
+        {winCounter}
+        {winTieDiv}
       </div>
     );
   }
